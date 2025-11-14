@@ -16,8 +16,8 @@
         /* Safiro Regular */
         @font-face {
             font-family: 'Safiro';
-            src: url('fonts/safiro-regular-webfont.woff2') format('woff2'),
-                 url('fonts/safiro-regular-webfont.woff') format('woff');
+            src: url('fonts/Safiro-Regular.woff2') format('woff2'),
+                 url('fonts/Safiro-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
             font-display: swap;
@@ -26,8 +26,8 @@
         /* Safiro Medium */
         @font-face {
             font-family: 'Safiro';
-            src: url('fonts/safiro-medium-webfont.woff2') format('woff2'),
-                 url('fonts/safiro-medium-webfont.woff') format('woff');
+            src: url('fonts/Safiro-Medium.woff2') format('woff2'),
+                 url('fonts/Safiro-Medium.woff') format('woff');
             font-weight: 500;
             font-style: normal;
             font-display: swap;
@@ -36,8 +36,8 @@
         /* Safiro Semibold */
         @font-face {
             font-family: 'Safiro';
-            src: url('fonts/safiro-semibold-webfont.woff2') format('woff2'),
-                 url('fonts/safiro-semibold-webfont.woff') format('woff');
+            src: url('fonts/Safiro-Semibold.woff2') format('woff2'),
+                 url('fonts/Safiro-Semibold.woff') format('woff');
             font-weight: 600;
             font-style: normal;
             font-display: swap;
@@ -46,8 +46,8 @@
         /* Safiro Bold */
         @font-face {
             font-family: 'Safiro';
-            src: url('fonts/safiro-bold-webfont.woff2') format('woff2'),
-                 url('fonts/safiro-bold-webfont.woff') format('woff');
+            src: url('fonts/Safiro-Bold.woff2') format('woff2'),
+                 url('fonts/Safiro-Bold.woff') format('woff');
             font-weight: 700;
             font-style: normal;
             font-display: swap;
@@ -134,6 +134,27 @@
         
         /* Custom Marker Styles */
         .custom-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+        }
+        
+        .custom-marker:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));
+        }
+        
+        .custom-marker img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Fallback für Emoji-Icons (falls keine Grafik vorhanden) */
+        .custom-marker-emoji {
             background: white;
             border: 3px solid;
             border-radius: 50%;
@@ -144,12 +165,6 @@
             justify-content: center;
             font-size: 20px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .custom-marker:hover {
-            transform: scale(1.15);
         }
         
         .marker-wohnungsbau { border-color: #e74c3c; }
@@ -405,12 +420,63 @@
             const categoryKey = project.Kategorie?.toLowerCase() || 'default';
             const categoryConfig = CATEGORY_CONFIG[categoryKey] || CATEGORY_CONFIG.default;
             
+            // Wenn eine Grafik vorhanden ist, Größe aus Bild ermitteln
+            if (project.IconGrafik) {
+                loadImageAndCreateMarker(project, categoryKey, categoryConfig);
+            } else {
+                // Fallback: Emoji-Icon mit Standardgröße
+                const iconSize = project.IconGroesse || 40;
+                createMarkerWithIcon(project, categoryKey, categoryConfig, iconSize, null);
+            }
+        }
+        
+        // Bild laden und tatsächliche Größe ermitteln
+        function loadImageAndCreateMarker(project, categoryKey, categoryConfig) {
+            const img = new Image();
+            
+            img.onload = function() {
+                // Originalgröße des Bildes verwenden
+                const iconSize = Math.max(img.width, img.height);
+                createMarkerWithIcon(project, categoryKey, categoryConfig, iconSize, project.IconGrafik);
+            };
+            
+            img.onerror = function() {
+                console.warn('Icon-Bild konnte nicht geladen werden:', project.IconGrafik);
+                // Fallback auf Emoji oder Standard-Icon
+                const iconSize = project.IconGroesse || 40;
+                createMarkerWithIcon(project, categoryKey, categoryConfig, iconSize, null);
+            };
+            
+            img.src = project.IconGrafik;
+        }
+        
+        // Marker mit Icon erstellen
+        function createMarkerWithIcon(project, categoryKey, categoryConfig, iconSize, iconGraphicUrl) {
+            let iconHTML;
+            
+            if (iconGraphicUrl) {
+                // PNG/SVG Grafik verwenden
+                iconHTML = `<div class="custom-marker" style="width: ${iconSize}px; height: ${iconSize}px;">
+                              <img src="${iconGraphicUrl}" alt="${project.Name}">
+                            </div>`;
+            } else if (project.Icon) {
+                // Fallback: Emoji-Icon verwenden
+                iconHTML = `<div class="custom-marker-emoji marker-${categoryKey}" style="width: ${iconSize}px; height: ${iconSize}px; font-size: ${iconSize * 0.5}px;">
+                              ${project.Icon}
+                            </div>`;
+            } else {
+                // Default: Kategorie-Icon
+                iconHTML = `<div class="custom-marker-emoji marker-${categoryKey}" style="width: ${iconSize}px; height: ${iconSize}px; font-size: ${iconSize * 0.5}px;">
+                              ${categoryConfig.icon}
+                            </div>`;
+            }
+            
             const customIcon = L.divIcon({
                 className: 'custom-div-icon',
-                html: `<div class="custom-marker marker-${categoryKey}">${project.Icon || categoryConfig.icon}</div>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20],
-                popupAnchor: [0, -20]
+                html: iconHTML,
+                iconSize: [iconSize, iconSize],
+                iconAnchor: [iconSize / 2, iconSize / 2],
+                popupAnchor: [0, -(iconSize / 2)]
             });
             
             const popupContent = createPopupContent(project, categoryConfig);
