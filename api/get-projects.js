@@ -1,30 +1,21 @@
-// netlify/functions/get-projects.js
+// api/get-projects.js
 
-exports.handler = async function(event, context) {
+export default async function handler(req, res) {
   
-  // Airtable-Konfiguration aus Umgebungsvariablen
-  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-  const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME;
-  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  // CORS-Headers für Browser-Zugriff
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
-  
-  // OPTIONS-Request für CORS Preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
   
   try {
-    // Airtable API aufrufen
+    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+    const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME;
+    const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+    
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
     
     const response = await fetch(url, {
@@ -39,23 +30,13 @@ exports.handler = async function(event, context) {
     
     const data = await response.json();
     
-    // Daten zurückgeben
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(data)
-    };
+    return res.status(200).json(data);
     
   } catch (error) {
     console.error('Function Error:', error);
-    
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ 
-        error: 'Fehler beim Laden der Daten',
-        message: error.message 
-      })
-    };
+    return res.status(500).json({ 
+      error: 'Fehler beim Laden der Daten',
+      message: error.message 
+    });
   }
-};
+}
