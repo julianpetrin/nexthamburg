@@ -377,7 +377,7 @@
             
             try {
                 // Ruft die Netlify Function auf (statt direktem Airtable-API-Call)
-                const response = await fetch('/.netlify/functions/get-projects');
+                const response = await fetch('/api/get-projects');
                 
                 if (!response.ok) {
                     throw new Error(`Server Error: ${response.status}`);
