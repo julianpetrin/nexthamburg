@@ -382,23 +382,31 @@
             const loadingOverlay = document.getElementById('loadingOverlay');
             
             try {
-                // Ruft die Netlify Function auf (statt direktem Airtable-API-Call)
-                const response = await fetch('/.netlify/functions/get-projects');
+                console.log('Lade Projekte von API...');
+                
+                // Ruft die Vercel Function auf
+                const response = await fetch('/api/get-projects');
+                
+                console.log('API Response Status:', response.status);
                 
                 if (!response.ok) {
                     throw new Error(`Server Error: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('Erhaltene Daten:', data);
                 
                 // Projekte verarbeiten und Marker erstellen
-                data.records.forEach(record => {
-                    createMarker(record.fields);
-                });
+                if (data.records && data.records.length > 0) {
+                    data.records.forEach(record => {
+                        createMarker(record.fields);
+                    });
+                    console.log(`✅ ${data.records.length} Projekte erfolgreich geladen`);
+                } else {
+                    console.warn('⚠️ Keine Projekte in Airtable gefunden');
+                }
                 
                 loadingOverlay.classList.add('hidden');
-                
-                console.log(`✅ ${data.records.length} Projekte erfolgreich geladen`);
                 
             } catch (error) {
                 console.error('Fehler beim Laden der Projekte:', error);
