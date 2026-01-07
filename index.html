@@ -362,9 +362,11 @@
         
         const map = L.map('map').setView([53.5511, 9.9937], 11);
         
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap',
-            maxZoom: 18,
+        L.tileLayer('tiles/{z}/{x}/{y}.png', {
+            attribution: 'Eigene Grundkarte',
+            minZoom: 10,
+            maxZoom: 14,
+            bounds: [[53.3, 9.5], [53.8, 10.5]] // Hamburg
         }).addTo(map);
         
         
