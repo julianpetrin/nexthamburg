@@ -360,14 +360,18 @@
         // 1. KARTE INITIALISIEREN
         // ==========================================
         
-        const map = L.map('map').setView([53.5511, 9.9937], 11);
+        const map = L.map('map').setView([53.5511, 9.9937], 12);
         
-        L.tileLayer('tiles/{z}/{x}/{y}.png', {
-            attribution: 'Eigene Grundkarte',
+        // IHRE EIGENE GRUNDKARTE
+        L.tileLayer('map/basemap_tiles/{z}/{x}/{y}.png', {
+            attribution: 'Eigene Grundkarte Hamburg',
             minZoom: 10,
             maxZoom: 14,
-            bounds: [[53.3, 9.5], [53.8, 10.5]] // Hamburg
+            bounds: [[53.3, 9.5], [53.8, 10.5]] // Hamburg Bounding Box
         }).addTo(map);
+        
+        // Karte auf Hamburg-Grenzen beschränken
+        map.setMaxBounds([[53.3, 9.5], [53.8, 10.5]]);
         
         
         // ==========================================
@@ -379,7 +383,7 @@
             
             try {
                 // Ruft die Netlify Function auf (statt direktem Airtable-API-Call)
-                const response = await fetch('/api/get-projects');
+                const response = await fetch('/.netlify/functions/get-projects');
                 
                 if (!response.ok) {
                     throw new Error(`Server Error: ${response.status}`);
